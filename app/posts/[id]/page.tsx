@@ -1,5 +1,5 @@
+import {type Post } from '@/types/post';
 import { notFound } from 'next/navigation';
-import { type Post } from '../../types';
 
 export async function generateStaticParams() {
 	const res = await fetch(

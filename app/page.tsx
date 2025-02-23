@@ -1,9 +1,5 @@
+import { Post } from '@/types/post';
 import Link from 'next/link';
-
-type Post = {
-	id: number;
-	title: string;
-};
 
 export default async function Home() {
 	const res = await fetch(
