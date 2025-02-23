@@ -64,10 +64,6 @@ export async function generateStaticParams() {
     return posts.map((post) => ({ id: post.id.toString() }));
 }
 ```
-- Adds **`dynamicParams = false`** to prevent runtime errors:
-```tsx
-export const dynamicParams = false;
-```
 
 ## 📖 Understanding ISR & Stale-While-Revalidate (SWR)
 - ISR **serves cached content instantly**.
