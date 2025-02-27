@@ -1,14 +1,19 @@
 import { Post } from '@/types/post';
 import Link from 'next/link';
 
+export const revalidate = 10; // Revalidate everything together every 10 seconds
+
+async function fetchPosts(userId: number) {
+	const res = await fetch(`https://jsonplaceholder.typicode.com/posts?userId=${userId}`);
+	return res.json();
+}
+
 export default async function Home() {
-	const res = await fetch(
-		'https://jsonplaceholder.typicode.com/posts?_limit=5',
-		{
-			next: { revalidate: 10 }, // ISR: Regenerates the page every 10 seconds
-		}
-	);
-	const posts: Post[] = await res.json();
+	// waterfall fetch
+	const posts1: Post[] = await fetchPosts(1);
+	const posts2: Post[] = await fetchPosts(2);
+	const posts3: Post[] = await fetchPosts(3);
+	const posts = [...posts1, ...posts2, ...posts3];
 
 	return (
 		<main className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground p-6">
