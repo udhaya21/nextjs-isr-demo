@@ -5,7 +5,7 @@ import { type Post } from '@/types/post';
 
 const REDIS_PREFIX = `posts:user`;
 
-const redis = new Redis(process.env.UPSTASH_REDIS_URL!, {
+const redis = new Redis(process.env.KV_URL!, {
 	tls: {
 		rejectUnauthorized: false,
 	},
@@ -13,7 +13,7 @@ const redis = new Redis(process.env.UPSTASH_REDIS_URL!, {
 
 async function fetchPostsByUserId(userId: number): Promise<Post[]> {
 	const redisKey = `${REDIS_PREFIX}:${userId}`;
-	
+
 	const cached = await redis.get(`${REDIS_PREFIX}:${userId}`);
 	if (cached) {
 		return JSON.parse(cached) as Post[];
