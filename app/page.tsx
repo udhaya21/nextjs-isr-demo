@@ -1,56 +1,20 @@
-import Redis from 'ioredis';
+import { Post } from '@/types/post';
 import Link from 'next/link';
 
-import { type Post } from '@/types/post';
+export const revalidate = 10; // Revalidate everything together every 10 seconds
 
-const REDIS_PREFIX = `posts:user`;
-
-const redis = new Redis(process.env.KV_URL!, {
-	tls: {
-		rejectUnauthorized: false,
-	},
-});
-
-async function fetchPostsByUserId(userId: number): Promise<Post[]> {
-	const redisKey = `${REDIS_PREFIX}:${userId}`;
-
-	const cached = await redis.get(`${REDIS_PREFIX}:${userId}`);
-	if (cached) {
-		return JSON.parse(cached) as Post[];
-	} else {
-		const res = await fetch(
-			`https://jsonplaceholder.typicode.com/posts?userId=${userId}`
-		);
-
-		if (!res.ok) {
-			throw new Error(`Failed to fetch posts for user ${userId}`);
-		}
-
-		const posts = (await res.json()) as Post[];
-
-		await redis.set(redisKey, JSON.stringify(posts));
-
-		return posts;
-	}
+async function fetchPosts(userId: number) {
+	const res = await fetch(`https://jsonplaceholder.typicode.com/posts?userId=${userId}`);
+	return res.json();
 }
 
 export default async function Home() {
-	let allPosts: Post[] = [];
+	// waterfall fetch
+	const posts1: Post[] = await fetchPosts(1);
+	const posts2: Post[] = await fetchPosts(2);
+	const posts3: Post[] = await fetchPosts(3);
+	const posts = [...posts1, ...posts2, ...posts3];
 
-	// For example, fetch posts for users 1, 2, and 3
-	const userIds = [1, 2, 3];
-	const promises = userIds.map((id) => fetchPostsByUserId(id));
-
-	const results = await Promise.allSettled(promises);
-
-	// Combine only the fulfilled results into allPosts
-	for (const result of results) {
-		if (result.status === 'fulfilled') {
-			allPosts = allPosts.concat(result.value);
-		} else {
-			console.error('Failed fetching user posts:', result.reason);
-		}
-	}
 	return (
 		<main className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground p-6">
 			<div className="max-w-2xl w-full">
@@ -63,14 +27,14 @@ export default async function Home() {
 				<div className="border-b border-gray-700 mb-6"></div>
 				<h2 className="text-2xl font-semibold mb-4">Latest Posts</h2>
 				<ul className="space-y-4">
-					{allPosts.map((post) => (
+					{posts.map((post) => (
 						<li
-							className="p-4 border rounded-lg hover:bg-gray-900 transition"
 							key={post.id}
+							className="p-4 border rounded-lg hover:bg-gray-900 transition"
 						>
 							<Link
-								className="text-xl font-medium text-blue-400 hover:underline"
 								href={`/posts/${post.id}`}
+								className="text-xl font-medium text-blue-400 hover:underline"
 							>
 								{post.title}
 							</Link>
